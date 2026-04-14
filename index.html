@@ -6,7 +6,7 @@
   <title>WebCraft · Touch Drag & Drop</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* ----- MOBILE VARIABLES ----- */
+    /* ----- LIGHT MODE (default) ----- */
     :root {
       --bg-app: #f8fafc;
       --bg-surface: #ffffff;
@@ -17,12 +17,14 @@
       --primary-light: #eef2ff;
       --canvas-bg: rgba(255, 255, 255, 0.9);
       --canvas-solid: #ffffff;
+      --canvas-text: #0f172a;        /* ✨ Canvas text color */
       --shadow: 0 4px 12px rgba(0,0,0,0.05);
       --block-color: rgba(200, 200, 210, 0.2);
       --bottom-nav-height: 70px;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
+    /* ----- DARK MODE ----- */
     .dark-mode {
       --bg-app: #0f172a;
       --bg-surface: #1e293b;
@@ -33,6 +35,7 @@
       --primary-light: #312e81;
       --canvas-bg: rgba(30, 41, 59, 0.9);
       --canvas-solid: #1e293b;
+      --canvas-text: #f1f5f9;         /* ✨ Light text on dark canvas */
       --block-color: rgba(100, 116, 139, 0.15);
     }
 
@@ -67,7 +70,7 @@
       font-size: 1.3rem; padding: 6px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       width: 40px; height: 40px; border-radius: 40px;
-      transition: background 0.15s;
+      transition: background 0.15s, color 0.2s;
     }
     .icon-btn:hover { background: var(--primary-light); }
     .icon-btn.active { color: var(--primary); }
@@ -107,9 +110,10 @@
     }
     .website-canvas {
       background: var(--canvas-bg); backdrop-filter: blur(4px);
-      color: var(--canvas-solid, #0f172a); min-height: 100%; width: 100%;
+      color: var(--canvas-text);      /* ✨ Uses theme-aware variable */
+      min-height: 100%; width: 100%;
       border-radius: 20px; box-shadow: var(--shadow); padding: 20px 16px;
-      outline: 2px solid transparent; transition: background 0.2s, outline 0.1s;
+      outline: 2px solid transparent; transition: background 0.2s, color 0.2s, outline 0.1s;
       position: relative; z-index: 3;
     }
     .website-canvas.drag-over { outline: 2px dashed var(--primary); }
@@ -138,12 +142,12 @@
       flex: 1; display: flex; flex-direction: column; align-items: center;
       justify-content: center; gap: 4px; padding: 8px 0;
       background: transparent; border: none; color: var(--text-muted);
-      font-size: 0.75rem; cursor: pointer; transition: color 0.1s;
+      font-size: 0.75rem; cursor: pointer; transition: color 0.2s;
     }
     .nav-item i { font-size: 1.5rem; }
     .nav-item.active { color: var(--primary); }
 
-    /* Drawer (elements) */
+    /* Drawer */
     .drawer {
       position: fixed; top: 0; left: 0; bottom: var(--bottom-nav-height);
       width: 280px; background: var(--bg-surface); z-index: 30;
@@ -153,7 +157,7 @@
     }
     .drawer.open { transform: translateX(0); }
     .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .drawer-title { font-weight: 700; font-size: 1.2rem; }
+    .drawer-title { font-weight: 700; font-size: 1.2rem; color: var(--text-main); }
     .close-drawer { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
 
     .elements-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -171,7 +175,7 @@
       color: var(--text-main); font-size: 1rem; cursor: pointer;
     }
 
-    /* Bottom Sheet (style editor) */
+    /* Bottom Sheet */
     .bottom-sheet {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: var(--bg-surface); z-index: 40;
@@ -183,14 +187,15 @@
     .bottom-sheet.open { transform: translateY(0); }
     .sheet-handle { width: 50px; height: 5px; background: var(--border-light); border-radius: 10px; margin: 12px auto 8px; }
     .sheet-header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px 12px; border-bottom: 1px solid var(--border-light); }
-    .sheet-title { font-weight: 700; }
-    .close-sheet { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+    .sheet-title { font-weight: 700; color: var(--text-main); }
+    .close-sheet { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
 
     .sheet-content { flex: 1; overflow-y: auto; padding: 16px 20px; }
     .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; }
     .tab-btn {
       flex: 1; padding: 10px; background: transparent; border: none;
       border-bottom: 2px solid transparent; font-weight: 600; color: var(--text-muted);
+      transition: color 0.2s, border-color 0.2s;
     }
     .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
     .tab-pane { display: none; }
@@ -209,21 +214,19 @@
       background: transparent; border: 1px solid var(--border-light); color: var(--text-main);
     }
 
-    /* Overlay */
+    /* Overlay & Modal */
     .overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.4); z-index: 25; display: none;
     }
     .overlay.visible { display: block; }
-
-    /* Modal */
     .modal {
       display: none; position: fixed; top:0; left:0; width:100%; height:100%;
       background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100;
     }
     .modal-content {
       background: var(--bg-surface); margin: 20px; padding: 20px; border-radius: 24px;
-      max-height: 80vh; overflow: auto;
+      max-height: 80vh; overflow: auto; color: var(--text-main);
     }
   </style>
 </head>
@@ -280,7 +283,7 @@
       <div class="element-card" data-type="grid" draggable="true"><i class="fas fa-th"></i> Grid</div>
     </div>
     <div style="margin-top: 24px;">
-      <h4 style="margin-bottom: 12px;">📦 Templates</h4>
+      <h4 style="margin-bottom: 12px; color: var(--text-main);">📦 Templates</h4>
       <button class="template-btn" data-template="landing">Landing</button>
       <button class="template-btn" data-template="portfolio">Portfolio</button>
       <button class="template-btn" data-template="blog">Blog</button>
@@ -388,7 +391,6 @@
 
     function genId() { return 'el_'+Date.now()+'_'+Math.random().toString(36); }
 
-    // Render canvas
     function renderCanvas() {
       canvas.innerHTML = '';
       if (!elements.length) canvas.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px">✨ Drag from drawer</div>';
@@ -504,7 +506,6 @@
       const type = card.dataset.type;
       e.dataTransfer.setData('text/plain', `new:${type}`);
       e.dataTransfer.effectAllowed = 'copy';
-      // Close drawer immediately when drag starts
       drawer.classList.remove('open');
       overlay.classList.remove('visible');
     }
@@ -523,15 +524,11 @@
       e.preventDefault();
       canvas.classList.remove('drag-over');
       const data = e.dataTransfer.getData('text/plain');
-      if (!data) return;
-      if (data.startsWith('new:')) {
-        const type = data.split(':')[1];
-        addElement(type);
+      if (data && data.startsWith('new:')) {
+        addElement(data.split(':')[1]);
       }
-      // Could also handle reorder, but keep it simple for mobile
     }
 
-    // Attach drag/drop events
     function initDragDrop() {
       document.querySelectorAll('.element-card').forEach(card => {
         card.addEventListener('dragstart', handleDragStart);
@@ -541,7 +538,7 @@
       canvas.addEventListener('drop', handleDrop);
     }
 
-    // Event listeners
+    // ---------- INIT ----------
     function init() {
       const saved = localStorage.getItem('wc_mobile_save');
       elements = saved ? JSON.parse(saved) : [
@@ -551,36 +548,25 @@
       pushHistory(); renderCanvas();
       initDragDrop();
 
-      // UI toggles
-      document.getElementById('menuBtn').addEventListener('click', ()=>{
-        drawer.classList.add('open'); overlay.classList.add('visible');
-      });
+      document.getElementById('menuBtn').addEventListener('click', ()=> { drawer.classList.add('open'); overlay.classList.add('visible'); });
       document.getElementById('closeDrawerBtn').addEventListener('click', closePanels);
-      document.getElementById('addBtn').addEventListener('click', ()=>{
-        drawer.classList.add('open'); overlay.classList.add('visible');
-      });
-      document.getElementById('styleBtn').addEventListener('click', ()=>{
+      document.getElementById('addBtn').addEventListener('click', ()=> { drawer.classList.add('open'); overlay.classList.add('visible'); });
+      document.getElementById('styleBtn').addEventListener('click', ()=> {
         if (selectedIndex>=0) { sheet.classList.add('open'); overlay.classList.add('visible'); }
         else alert('Select an element first');
       });
-      document.getElementById('moreBtn').addEventListener('click', ()=>{
-        moreModal.style.display = 'flex';
-      });
+      document.getElementById('moreBtn').addEventListener('click', ()=> moreModal.style.display='flex');
       document.getElementById('closeSheetBtn').addEventListener('click', closePanels);
       overlay.addEventListener('click', closePanels);
       document.getElementById('closeModalBtn').addEventListener('click', ()=> moreModal.style.display='none');
 
-      // Tap to add (fallback) – we keep for quick add but drag is primary
       document.querySelectorAll('.element-card').forEach(card => {
         card.addEventListener('click', (e) => {
-          // Only add if not dragging (dragstart will close drawer)
-          const type = e.currentTarget.dataset.type;
-          addElement(type);
+          addElement(e.currentTarget.dataset.type);
           closePanels();
         });
       });
 
-      // Templates
       document.querySelectorAll('.template-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const tpl = e.target.dataset.template;
@@ -600,7 +586,6 @@
         });
       });
 
-      // Style inputs
       const bindInput = (id, handler) => document.getElementById(id).addEventListener('input', handler);
       bindInput('contentText', e => updateSelected('content', e.target.value));
       bindInput('buttonLabel', e => updateSelected('content', e.target.value));
@@ -631,22 +616,17 @@
         });
       });
 
-      // Undo/redo
       document.getElementById('undoBtn').addEventListener('click', undo);
       document.getElementById('redoBtn').addEventListener('click', redo);
-      
-      // Save/load/export
       document.getElementById('saveBtnMobile').addEventListener('click', ()=>{
-        localStorage.setItem('wc_mobile_save', JSON.stringify(elements)); alert('Saved!');
-        closePanels();
+        localStorage.setItem('wc_mobile_save', JSON.stringify(elements)); alert('Saved!'); closePanels();
       });
       document.getElementById('loadBtnMobile').addEventListener('click', ()=>{
         const s = localStorage.getItem('wc_mobile_save');
-        if(s) { elements = JSON.parse(s); pushHistory(); renderCanvas(); }
-        closePanels();
+        if(s) { elements = JSON.parse(s); pushHistory(); renderCanvas(); } closePanels();
       });
       document.getElementById('exportBtnMobile').addEventListener('click', ()=>{
-        let html = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:sans-serif;padding:16px;}</style></head><body>`;
+        let html = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:sans-serif;padding:16px;background:${getComputedStyle(document.body).getPropertyValue('--canvas-solid')};color:${getComputedStyle(document.body).getPropertyValue('--canvas-text')};}</style></head><body>`;
         elements.forEach(el => {
           const styles = el.styles ? Object.entries(el.styles).map(([k,v])=>`${k}:${v}`).join(';') : '';
           if(el.type==='image') html += `<img src="${el.src}" style="${styles}">`;
@@ -658,7 +638,6 @@
         closePanels();
       });
       
-      // Delete/duplicate
       document.getElementById('deleteBtn').addEventListener('click', ()=>{
         if(selectedIndex>=0){ elements.splice(selectedIndex,1); pushHistory(); renderCanvas(); selectedIndex=-1; closePanels(); }
       });
@@ -669,14 +648,13 @@
         }
       });
 
-      // Theme
       document.getElementById('themeToggle').addEventListener('click', ()=>{
         document.body.classList.toggle('dark-mode');
-        document.querySelector('#themeToggle i').className = document.body.classList.contains('dark-mode') ? 'fas fa-sun' : 'fas fa-moon';
-        renderCanvas();
+        const isDark = document.body.classList.contains('dark-mode');
+        document.querySelector('#themeToggle i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        renderCanvas(); // re-render to refresh text colors if needed
       });
 
-      // Tabs
       document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e)=>{
         const tab = e.target.dataset.tab;
         document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
