@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>WebCraft · Mobile Builder</title>
+  <title>WebCraft · Touch Drag & Drop</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* ----- MOBILE-ONLY VARIABLES ----- */
+    /* ----- MOBILE VARIABLES ----- */
     :root {
       --bg-app: #f8fafc;
       --bg-surface: #ffffff;
@@ -48,14 +48,9 @@
       padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
     }
 
-    .app {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      position: relative;
-    }
+    .app { display: flex; flex-direction: column; height: 100%; position: relative; }
 
-    /* ----- TOP BAR (minimal) ----- */
+    /* Top Bar */
     .top-bar {
       background: var(--bg-surface);
       padding: 12px 16px;
@@ -77,7 +72,7 @@
     .icon-btn:hover { background: var(--primary-light); }
     .icon-btn.active { color: var(--primary); }
 
-    /* ----- CANVAS (main area) ----- */
+    /* Canvas */
     .canvas-wrapper {
       flex: 1;
       background: var(--canvas-solid);
@@ -114,9 +109,10 @@
       background: var(--canvas-bg); backdrop-filter: blur(4px);
       color: var(--canvas-solid, #0f172a); min-height: 100%; width: 100%;
       border-radius: 20px; box-shadow: var(--shadow); padding: 20px 16px;
-      outline: 2px solid transparent; transition: background 0.2s;
+      outline: 2px solid transparent; transition: background 0.2s, outline 0.1s;
       position: relative; z-index: 3;
     }
+    .website-canvas.drag-over { outline: 2px dashed var(--primary); }
 
     .canvas-element {
       position: relative; margin: 10px 0; transition: outline 0.1s;
@@ -130,7 +126,7 @@
     }
     img { max-width: 100%; height: auto; border-radius: 8px; }
 
-    /* ----- BOTTOM NAVIGATION ----- */
+    /* Bottom Navigation */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: var(--bg-surface); border-top: 1px solid var(--border-light);
@@ -147,7 +143,7 @@
     .nav-item i { font-size: 1.5rem; }
     .nav-item.active { color: var(--primary); }
 
-    /* ----- DRAWER (elements) ----- */
+    /* Drawer (elements) */
     .drawer {
       position: fixed; top: 0; left: 0; bottom: var(--bottom-nav-height);
       width: 280px; background: var(--bg-surface); z-index: 30;
@@ -163,18 +159,19 @@
     .elements-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .element-card {
       background: var(--bg-app); border: 1px dashed var(--border-light); border-radius: 16px;
-      padding: 16px 8px; text-align: center; font-size: 0.9rem; cursor: pointer;
+      padding: 16px 8px; text-align: center; font-size: 0.9rem; cursor: grab;
       transition: 0.1s; color: var(--text-main);
       box-shadow: var(--shadow);
+      -webkit-user-drag: element;
     }
-    .element-card:active { background: var(--primary-light); transform: scale(0.97); }
+    .element-card:active { cursor: grabbing; background: var(--primary-light); transform: scale(0.97); }
     .template-btn {
       width: 100%; margin-bottom: 8px; padding: 14px; border-radius: 40px;
       border: 1px solid var(--border-light); background: var(--bg-surface);
       color: var(--text-main); font-size: 1rem; cursor: pointer;
     }
 
-    /* ----- BOTTOM SHEET (style editor) ----- */
+    /* Bottom Sheet (style editor) */
     .bottom-sheet {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: var(--bg-surface); z-index: 40;
@@ -184,14 +181,8 @@
       padding-bottom: var(--safe-bottom);
     }
     .bottom-sheet.open { transform: translateY(0); }
-    .sheet-handle {
-      width: 50px; height: 5px; background: var(--border-light);
-      border-radius: 10px; margin: 12px auto 8px;
-    }
-    .sheet-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0 20px 12px; border-bottom: 1px solid var(--border-light);
-    }
+    .sheet-handle { width: 50px; height: 5px; background: var(--border-light); border-radius: 10px; margin: 12px auto 8px; }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px 12px; border-bottom: 1px solid var(--border-light); }
     .sheet-title { font-weight: 700; }
     .close-sheet { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
 
@@ -256,7 +247,7 @@
     </div>
     <div class="canvas-header">
       <span id="selectedInfo">Tap element to edit</span>
-      <span id="emptyHint">✨ Tap + to add</span>
+      <span id="emptyHint">✨ Drag from drawer</span>
     </div>
     <div class="website-canvas" id="canvas" dropzone="move"></div>
   </main>
@@ -275,17 +266,18 @@
       <span class="drawer-title">➕ Elements</span>
       <button class="close-drawer" id="closeDrawerBtn"><i class="fas fa-times"></i></button>
     </div>
+    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Press & hold to drag</p>
     <div class="elements-grid">
-      <div class="element-card" data-type="heading"><i class="fas fa-heading"></i> Heading</div>
-      <div class="element-card" data-type="paragraph"><i class="fas fa-paragraph"></i> Text</div>
-      <div class="element-card" data-type="image"><i class="fas fa-image"></i> Image</div>
-      <div class="element-card" data-type="button"><i class="fas fa-square"></i> Button</div>
-      <div class="element-card" data-type="divider"><i class="fas fa-minus"></i> Divider</div>
-      <div class="element-card" data-type="container"><i class="fas fa-square"></i> Box</div>
-      <div class="element-card" data-type="card"><i class="fas fa-id-card"></i> Card</div>
-      <div class="element-card" data-type="navbar"><i class="fas fa-bars"></i> Navbar</div>
-      <div class="element-card" data-type="footer"><i class="fas fa-shoe-prints"></i> Footer</div>
-      <div class="element-card" data-type="grid"><i class="fas fa-th"></i> Grid</div>
+      <div class="element-card" data-type="heading" draggable="true"><i class="fas fa-heading"></i> Heading</div>
+      <div class="element-card" data-type="paragraph" draggable="true"><i class="fas fa-paragraph"></i> Text</div>
+      <div class="element-card" data-type="image" draggable="true"><i class="fas fa-image"></i> Image</div>
+      <div class="element-card" data-type="button" draggable="true"><i class="fas fa-square"></i> Button</div>
+      <div class="element-card" data-type="divider" draggable="true"><i class="fas fa-minus"></i> Divider</div>
+      <div class="element-card" data-type="container" draggable="true"><i class="fas fa-square"></i> Box</div>
+      <div class="element-card" data-type="card" draggable="true"><i class="fas fa-id-card"></i> Card</div>
+      <div class="element-card" data-type="navbar" draggable="true"><i class="fas fa-bars"></i> Navbar</div>
+      <div class="element-card" data-type="footer" draggable="true"><i class="fas fa-shoe-prints"></i> Footer</div>
+      <div class="element-card" data-type="grid" draggable="true"><i class="fas fa-th"></i> Grid</div>
     </div>
     <div style="margin-top: 24px;">
       <h4 style="margin-bottom: 12px;">📦 Templates</h4>
@@ -356,7 +348,6 @@
       <button class="btn-block" id="saveBtnMobile"><i class="fas fa-save"></i> Save to device</button>
       <button class="btn-block btn-outline-block" id="loadBtnMobile"><i class="fas fa-folder-open"></i> Load</button>
       <button class="btn-block btn-outline-block" id="exportBtnMobile"><i class="fas fa-code"></i> Export HTML</button>
-      <button class="btn-block btn-outline-block" id="previewDesktop"><i class="fas fa-desktop"></i> Desktop preview</button>
       <button class="btn-block btn-outline-block" id="closeModalBtn">Close</button>
     </div>
   </div>
@@ -400,7 +391,7 @@
     // Render canvas
     function renderCanvas() {
       canvas.innerHTML = '';
-      if (!elements.length) canvas.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px">✨ Tap + to add</div>';
+      if (!elements.length) canvas.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px">✨ Drag from drawer</div>';
       else {
         elements.forEach((el, idx) => {
           const wrapper = document.createElement('div');
@@ -506,14 +497,59 @@
       moreModal.style.display = 'none';
     }
 
+    // ---------- TOUCH DRAG & DROP ----------
+    function handleDragStart(e) {
+      const card = e.target.closest('.element-card');
+      if (!card) return;
+      const type = card.dataset.type;
+      e.dataTransfer.setData('text/plain', `new:${type}`);
+      e.dataTransfer.effectAllowed = 'copy';
+      // Close drawer immediately when drag starts
+      drawer.classList.remove('open');
+      overlay.classList.remove('visible');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      canvas.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      canvas.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      canvas.classList.remove('drag-over');
+      const data = e.dataTransfer.getData('text/plain');
+      if (!data) return;
+      if (data.startsWith('new:')) {
+        const type = data.split(':')[1];
+        addElement(type);
+      }
+      // Could also handle reorder, but keep it simple for mobile
+    }
+
+    // Attach drag/drop events
+    function initDragDrop() {
+      document.querySelectorAll('.element-card').forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+      });
+      canvas.addEventListener('dragover', handleDragOver);
+      canvas.addEventListener('dragleave', handleDragLeave);
+      canvas.addEventListener('drop', handleDrop);
+    }
+
     // Event listeners
     function init() {
       const saved = localStorage.getItem('wc_mobile_save');
       elements = saved ? JSON.parse(saved) : [
         { ...defaultTemplates.heading, id: genId(), content: 'Welcome 👋' },
-        { ...defaultTemplates.paragraph, id: genId(), content: 'Tap the + button to add elements.' }
+        { ...defaultTemplates.paragraph, id: genId(), content: 'Drag elements from the drawer!' }
       ];
       pushHistory(); renderCanvas();
+      initDragDrop();
 
       // UI toggles
       document.getElementById('menuBtn').addEventListener('click', ()=>{
@@ -534,9 +570,10 @@
       overlay.addEventListener('click', closePanels);
       document.getElementById('closeModalBtn').addEventListener('click', ()=> moreModal.style.display='none');
 
-      // Element cards tap to add
+      // Tap to add (fallback) – we keep for quick add but drag is primary
       document.querySelectorAll('.element-card').forEach(card => {
         card.addEventListener('click', (e) => {
+          // Only add if not dragging (dragstart will close drawer)
           const type = e.currentTarget.dataset.type;
           addElement(type);
           closePanels();
