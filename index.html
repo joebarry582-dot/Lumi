@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WebCraft · Visual Builder</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* ----- CSS VARIABLES (Light Mode) ----- */
+    /* ----- CSS VARIABLES ----- */
     :root {
       --bg-app: #f5f7fb;
       --bg-panel: #ffffff;
@@ -15,7 +15,7 @@
       --text-muted: #64748b;
       --primary: #5a67d8;
       --primary-light: #eef2ff;
-      --canvas-bg: rgba(255, 255, 255, 0.85);  /* semi-transparent to show floating blocks */
+      --canvas-bg: rgba(255, 255, 255, 0.85);
       --canvas-solid: #ffffff;
       --canvas-text: #1e293b;
       --shadow: 0 8px 20px rgba(0,0,0,0.04);
@@ -49,7 +49,25 @@
       transition: background 0.2s, color 0.2s;
     }
 
-    /* ----- LAYOUT ----- */
+    /* Mobile warning */
+    .mobile-warning {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #ffedd5;
+      color: #9a3412;
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+      z-index: 9999;
+      border-bottom: 1px solid #fed7aa;
+    }
+    @media (max-width: 900px) {
+      .mobile-warning { display: block; }
+      body { padding-top: 36px; }
+    }
+
+    /* Layout */
     .app { display: flex; flex-direction: column; height: 100vh; }
     .top-bar {
       background: var(--bg-panel);
@@ -59,9 +77,11 @@
       align-items: center;
       justify-content: space-between;
       box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      flex-wrap: wrap;
+      gap: 10px;
     }
-    .logo { font-weight: 700; font-size: 1.4rem; color: var(--primary); letter-spacing: -0.5px; }
-    .top-actions { display: flex; gap: 8px; align-items: center; }
+    .logo { font-weight: 700; font-size: 1.4rem; color: var(--primary); }
+    .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .btn { padding: 0.5rem 1.1rem; border-radius: 30px; border: 1px solid var(--border-light); background: var(--bg-panel); color: var(--text-main); font-weight: 500; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; }
     .btn-primary { background: var(--primary); color: white; border: none; }
     .btn-outline:hover { background: var(--primary-light); border-color: var(--primary); }
@@ -71,7 +91,7 @@
 
     .main-layout { display: flex; flex: 1; overflow: hidden; }
 
-    /* Left panel */
+    /* Left Panel */
     .left-panel {
       width: 270px; background: var(--bg-panel); border-right: 1px solid var(--border-light);
       padding: 1.2rem 1rem; overflow-y: auto; color: var(--text-main);
@@ -89,7 +109,7 @@
     .template-btn { width: 100%; margin-bottom: 8px; padding: 10px; border-radius: 24px; border: 1px solid var(--border-light); background: var(--bg-panel); color: var(--text-main); cursor: pointer; transition: 0.1s; }
     .template-btn:hover { background: var(--primary-light); }
 
-    /* Canvas wrapper with floating blocks */
+    /* Canvas Wrapper */
     .canvas-wrapper {
       flex: 1;
       background: var(--canvas-solid);
@@ -100,19 +120,11 @@
       position: relative;
       isolation: isolate;
     }
-
-    /* Floating blocks container */
     .floating-blocks {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      overflow: hidden;
-      pointer-events: none;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1; overflow: hidden; pointer-events: none;
     }
-
     .floating-block {
       position: absolute;
       background: var(--block-color);
@@ -121,15 +133,12 @@
       box-shadow: 0 8px 16px rgba(0,0,0,0.02);
       animation: floatBlock 18s infinite ease-in-out;
     }
-
     @keyframes floatBlock {
       0% { transform: translate(0, 0) rotate(0deg); }
       33% { transform: translate(30px, -40px) rotate(3deg); }
       66% { transform: translate(-20px, 20px) rotate(-2deg); }
       100% { transform: translate(0, 0) rotate(0deg); }
     }
-
-    /* Individual block sizes and delays */
     .floating-block:nth-child(1) { width: 180px; height: 180px; top: 10%; left: 5%; animation-duration: 22s; }
     .floating-block:nth-child(2) { width: 120px; height: 120px; top: 60%; left: 80%; animation-duration: 25s; animation-delay: -5s; }
     .floating-block:nth-child(3) { width: 200px; height: 140px; top: 75%; left: 15%; animation-duration: 20s; animation-delay: -2s; }
@@ -139,19 +148,14 @@
     .floating-block:nth-child(7) { width: 220px; height: 100px; top: 85%; left: 60%; animation-duration: 24s; }
 
     .canvas-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      color: var(--text-main);
-      position: relative;
-      z-index: 3;
+      display: flex; justify-content: space-between; margin-bottom: 10px;
+      color: var(--text-main); position: relative; z-index: 3;
     }
-    .empty-hint { color: var(--text-muted); font-style: italic; }
     .canvas-container {
       flex: 1;
       display: flex;
       justify-content: center;
-      transition: max-width 0.2s;
+      transition: max-width 0.3s ease;
       position: relative;
       z-index: 3;
     }
@@ -165,28 +169,20 @@
       box-shadow: var(--shadow);
       padding: 24px;
       outline: 2px solid transparent;
-      transition: background 0.2s, color 0.2s;
+      transition: background 0.2s, color 0.2s, max-width 0.3s;
     }
     .canvas-container.desktop .website-canvas { max-width: 100%; }
-    .canvas-container.tablet .website-canvas { max-width: 768px; margin: 0 auto; }
-    .canvas-container.mobile .website-canvas { max-width: 375px; margin: 0 auto; }
+    .canvas-container.tablet .website-canvas { max-width: 768px; margin-left: auto; margin-right: auto; }
+    .canvas-container.mobile .website-canvas { max-width: 375px; margin-left: auto; margin-right: auto; }
 
     .canvas-element {
       position: relative; margin: 8px 0; transition: box-shadow 0.1s, outline 0.1s;
     }
-    .canvas-element:hover {
-      outline: 1px dashed var(--hover-outline);
-      outline-offset: 2px;
-    }
-    .canvas-element.selected {
-      outline: 2px solid var(--primary) !important;
-      outline-offset: 2px;
-    }
-    [contenteditable="true"]:focus {
-      outline: 2px dashed #3b82f6; background: rgba(59,130,246,0.05);
-    }
+    .canvas-element:hover { outline: 1px dashed var(--hover-outline); outline-offset: 2px; }
+    .canvas-element.selected { outline: 2px solid var(--primary) !important; outline-offset: 2px; }
+    [contenteditable="true"]:focus { outline: 2px dashed #3b82f6; background: rgba(59,130,246,0.05); }
 
-    /* Right panel */
+    /* Right Panel */
     .right-panel { width: 310px; background: var(--bg-panel); border-left: 1px solid var(--border-light); display: flex; flex-direction: column; color: var(--text-main); }
     .panel-tabs { display: flex; border-bottom: 1px solid var(--border-light); }
     .tab-btn { flex: 1; padding: 12px 4px; background: transparent; border: none; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.1s; }
@@ -209,24 +205,21 @@
     .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
     .modal-content { background: var(--bg-panel); color: var(--text-main); padding: 24px; border-radius: 24px; width: 700px; max-width: 90%; }
     .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-
-    #themeToggle { background: transparent; border: 1px solid var(--border-light); border-radius: 30px; padding: 8px 12px; }
   </style>
 </head>
 <body>
+<div class="mobile-warning">⚠️ WebCraft is designed for desktop. For the best experience, use a larger screen.</div>
 <div class="app">
   <header class="top-bar">
     <div class="logo">🎨 WebCraft</div>
     <div class="top-actions">
-      <button class="btn btn-outline" id="themeToggle" title="Toggle light/dark mode">
-        <i class="fas fa-moon"></i><span> Dark</span>
-      </button>
+      <button class="btn btn-outline" id="themeToggle"><i class="fas fa-moon"></i><span> Dark</span></button>
       <button class="btn btn-outline" id="undoBtn"><i class="fas fa-undo-alt"></i></button>
       <button class="btn btn-outline" id="redoBtn"><i class="fas fa-redo-alt"></i></button>
       <div class="responsive-toggles">
-        <button class="preview-btn active" data-device="desktop"><i class="fas fa-desktop"></i></button>
-        <button class="preview-btn" data-device="tablet"><i class="fas fa-tablet-alt"></i></button>
-        <button class="preview-btn" data-device="mobile"><i class="fas fa-mobile-alt"></i></button>
+        <button class="preview-btn active" data-device="desktop"><i class="fas fa-desktop"></i> Desktop</button>
+        <button class="preview-btn" data-device="tablet"><i class="fas fa-tablet-alt"></i> Tablet</button>
+        <button class="preview-btn" data-device="mobile"><i class="fas fa-mobile-alt"></i> Mobile</button>
       </div>
       <button class="btn btn-outline" id="saveBtn"><i class="fas fa-save"></i> Save</button>
       <button class="btn btn-outline" id="loadBtn"><i class="fas fa-folder-open"></i> Load</button>
@@ -235,7 +228,7 @@
   </header>
 
   <div class="main-layout">
-    <!-- LEFT PANEL (same) -->
+    <!-- LEFT PANEL -->
     <aside class="left-panel">
       <div class="panel-header"><h3>➕ Elements</h3><p class="hint">Drag & drop onto canvas</p></div>
       <div class="elements-grid" id="elementsLibrary">
@@ -258,17 +251,11 @@
       </div>
     </aside>
 
-    <!-- CANVAS with floating blocks -->
+    <!-- CANVAS -->
     <main class="canvas-wrapper">
-      <!-- Floating background blocks -->
       <div class="floating-blocks">
-        <div class="floating-block"></div>
-        <div class="floating-block"></div>
-        <div class="floating-block"></div>
-        <div class="floating-block"></div>
-        <div class="floating-block"></div>
-        <div class="floating-block"></div>
-        <div class="floating-block"></div>
+        <div class="floating-block"></div><div class="floating-block"></div><div class="floating-block"></div>
+        <div class="floating-block"></div><div class="floating-block"></div><div class="floating-block"></div><div class="floating-block"></div>
       </div>
       <div class="canvas-header">
         <span class="selected-info" id="selectedInfo">Click any element to edit</span>
@@ -279,7 +266,7 @@
       </div>
     </main>
 
-    <!-- RIGHT PANEL (with image resizing) -->
+    <!-- RIGHT PANEL -->
     <aside class="right-panel">
       <div class="panel-tabs">
         <button class="tab-btn active" data-tab="content">Content</button>
@@ -291,22 +278,18 @@
         <!-- Content Tab -->
         <div class="tab-pane active" id="tab-content">
           <div class="prop-group"><label>Text</label><input type="text" id="contentText" placeholder="Edit content"></div>
-          
           <div id="imageControls" style="display:none;">
             <div class="prop-group"><label>Image URL</label><input type="text" id="imageUrl" placeholder="https://..."></div>
-            <div class="prop-group"><label>Width</label><input type="text" id="imageWidth" placeholder="e.g., 300px or 100%"></div>
+            <div class="prop-group"><label>Width</label><input type="text" id="imageWidth" placeholder="e.g., 300px"></div>
             <div class="prop-group"><label>Height</label><input type="text" id="imageHeight" placeholder="auto"></div>
-            <div class="checkbox-group">
-              <input type="checkbox" id="lockAspect"> <label for="lockAspect">Lock aspect ratio</label>
-            </div>
+            <div class="checkbox-group"><input type="checkbox" id="lockAspect"> <label>Lock aspect ratio</label></div>
             <button class="btn btn-outline small-btn" id="applyImageBtn">Apply Image & Size</button>
           </div>
-          
           <div class="prop-group" id="buttonLabelGroup" style="display:none;"><label>Button label</label><input type="text" id="buttonLabel"></div>
         </div>
         <!-- Style Tab -->
         <div class="tab-pane" id="tab-style">
-          <div class="prop-group"><label>Font family</label><select id="fontFamily"><option value="">Default</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="'Segoe UI'">Segoe UI</option></select></div>
+          <div class="prop-group"><label>Font family</label><select id="fontFamily"><option value="">Default</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option></select></div>
           <div class="prop-group"><label>Font size</label><input type="text" id="fontSize" placeholder="16px"></div>
           <div class="prop-group"><label>Text color</label><input type="color" id="textColor"></div>
           <div class="prop-group"><label>Background</label><input type="color" id="bgColor"><input type="text" id="bgGradient" placeholder="linear-gradient(...)"></div>
@@ -316,8 +299,8 @@
         </div>
         <!-- Layout Tab -->
         <div class="tab-pane" id="tab-layout">
-          <div class="prop-group"><label>Margin (px)</label><input type="text" id="margin" placeholder="10"></div>
-          <div class="prop-group"><label>Padding (px)</label><input type="text" id="padding" placeholder="15"></div>
+          <div class="prop-group"><label>Margin</label><input type="text" id="margin" placeholder="10px"></div>
+          <div class="prop-group"><label>Padding</label><input type="text" id="padding" placeholder="15px"></div>
           <div class="prop-group"><label>Width</label><input type="text" id="width" placeholder="auto"></div>
           <div class="prop-group"><label>Height</label><input type="text" id="height" placeholder="auto"></div>
           <div class="prop-group"><label>Flex align</label><select id="flexAlign"><option value="flex-start">Start</option><option value="center">Center</option><option value="flex-end">End</option></select></div>
@@ -348,10 +331,10 @@
 </div>
 
 <script>
-  // The JavaScript remains unchanged from the previous working version.
-  // It includes all features: drag/drop, undo/redo, style editing, image resizing, dark mode, templates, save/load, export.
   (function(){
     "use strict";
+
+    // ---------- STATE ----------
     let elements = [];
     let selectedIndex = -1;
     let historyStack = [];
@@ -378,6 +361,7 @@
 
     function genId() { return 'el_' + Date.now() + '_' + Math.random().toString(36); }
 
+    // ---------- RENDER ----------
     function renderCanvas() {
       canvas.innerHTML = '';
       if (elements.length === 0) {
@@ -483,6 +467,7 @@
       else selectedInfo.textContent = 'Click any element to edit';
     }
 
+    // ---------- DRAG & DROP ----------
     function handleDragStart(e) {
       const wrapper = e.target.closest('.canvas-element');
       if (wrapper) {
@@ -521,20 +506,14 @@
 
     function addElement(type) {
       const tpl = defaultTemplates[type] || defaultTemplates.container;
-      const newEl = {
-        id: genId(),
-        type,
-        tag: tpl.tag,
-        content: tpl.content || '',
-        src: tpl.src,
-        styles: { ...tpl.styles }
-      };
+      const newEl = { id: genId(), type, tag: tpl.tag, content: tpl.content || '', src: tpl.src, styles: { ...tpl.styles } };
       elements.push(newEl);
       pushHistory();
       renderCanvas();
       selectElement(elements.length - 1);
     }
 
+    // ---------- HISTORY ----------
     function pushHistory() {
       const snapshot = JSON.parse(JSON.stringify(elements));
       historyStack = historyStack.slice(0, historyIndex + 1);
@@ -560,6 +539,7 @@
       }
     }
 
+    // ---------- EVENT LISTENERS ----------
     function attachEvents() {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e) => {
         const tab = e.target.dataset.tab;
@@ -579,12 +559,9 @@
         if (!el.styles) el.styles = {};
         const widthVal = document.getElementById('imageWidth').value;
         const heightVal = document.getElementById('imageHeight').value;
-        if (widthVal) el.styles.width = widthVal;
-        else delete el.styles.width;
-        if (heightVal) el.styles.height = heightVal;
-        else delete el.styles.height;
-        pushHistory();
-        renderCanvas();
+        if (widthVal) el.styles.width = widthVal; else delete el.styles.width;
+        if (heightVal) el.styles.height = heightVal; else delete el.styles.height;
+        pushHistory(); renderCanvas();
       });
 
       const styleIds = ['fontFamily','fontSize','textColor','bgColor','bgGradient','borderRadius','boxShadow','textAlign','margin','padding','width','height','flexAlign','customCss','visibility'];
@@ -603,8 +580,7 @@
             else if (id === 'flexAlign') prop = 'justifyContent';
             el.styles[prop] = e.target.value;
           }
-          renderCanvas();
-          pushHistory();
+          renderCanvas(); pushHistory();
         });
       });
 
@@ -652,7 +628,7 @@
       }));
 
       document.getElementById('exportBtn').addEventListener('click', () => {
-        let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:sans-serif;padding:20px;background:${getComputedStyle(document.body).getPropertyValue('--canvas-bg')};color:${getComputedStyle(document.body).getPropertyValue('--canvas-text')};}</style></head><body>`;
+        let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:sans-serif;padding:20px;}</style></head><body>`;
         elements.forEach(el => {
           const styles = el.styles ? Object.entries(el.styles).map(([k,v])=>`${k}:${v}`).join(';') : '';
           if (el.type==='image') html += `<img src="${el.src}" style="${styles}">`;
@@ -663,8 +639,7 @@
         document.getElementById('exportModal').style.display = 'flex';
       });
       document.getElementById('copyCodeBtn').addEventListener('click', () => {
-        navigator.clipboard?.writeText(document.getElementById('exportCode').value);
-        alert('Copied!');
+        navigator.clipboard?.writeText(document.getElementById('exportCode').value); alert('Copied!');
       });
       document.getElementById('downloadBtn').addEventListener('click', () => {
         const blob = new Blob([document.getElementById('exportCode').value], {type:'text/html'});
